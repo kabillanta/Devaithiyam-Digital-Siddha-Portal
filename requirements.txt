@@ -1,0 +1,7 @@
+
+langchain
+pandas
+sentence-transformers
+faiss-cpu
+huggingface_hub
+getpass4

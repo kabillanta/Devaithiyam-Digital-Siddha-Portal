@@ -1,0 +1,7 @@
+# Environment variables
+# Ignore .env files in the root directory.
+/.env
+
+# Virtual Environment
+# Ignore all .venv directories anywhere in the project.
+.venv/
