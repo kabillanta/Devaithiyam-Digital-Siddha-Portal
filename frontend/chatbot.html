@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Siddha Chatbot</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+  <header>
+    <div class="navbar">
+      <h1><a href="index.html" class="header-link">Siddha Portal</a></h1>
+      <nav>
+      <a href="index.html">Home</a>
+      <a href="chatbot.html">Chatbot</a>
+      <a href="diseases.html">Diseases</a>
+      <a href="herbs.html">Herbs</a>
+      <a href="remedies.html">Remedies</a>
+      <a href="history.html">History</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="chat-container">
+    <div id="chat-box">
+      <div class="chat-message bot-message">
+        <i class="fas fa-leaf bot-icon"></i>
+        <div class="message-content">
+          <p>Hello! How can I help you today? Ask me about symptoms or diseases.</p>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="user-input" placeholder="Type your symptoms here..." autofocus />
+      <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </main>
+
+  <!-- ADDED: Marked.js library for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>

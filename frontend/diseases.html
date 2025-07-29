@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Diseases | Siddha Medicine</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .accordion { cursor: pointer; padding: 10px; background: #e7f5e6; border: none; outline: none; transition: 0.3s; margin-top: 10px; border-radius: 6px; }
+    .panel { padding: 0 15px; display: none; background-color: #f4fdf3; border-left: 4px solid #4caf50; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <h1>Diseases</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="chatbot.html">Chatbot</a>
+      <a href="diseases.html">Diseases</a>
+      <a href="herbs.html">Herbs</a>
+      <a href="remedies.html">Remedies</a>
+      <a href="history.html">History</a>
+    </nav>
+  </header>
+
+  <main style="padding: 2rem">
+    <button class="accordion">Whooping Cough</button>
+    <div class="panel"><p>Symptoms: Dry cough, wheezing, chest pain.<br/>Category: Respiratory</p></div>
+
+    <button class="accordion">Skin Rash</button>
+    <div class="panel"><p>Symptoms: Itching, redness, irritation.<br/>Category: Dermatological</p></div>
+
+    <button class="accordion">Constipation</button>
+    <div class="panel"><p>Symptoms: Irregular motion, stomach bloating.<br/>Category: Digestive</p></div>
+  </main>
+
+  <footer>
+    <p> References: Siddha Texts, AYUSH</p>
+  </footer>
+
+  <script>
+    const acc = document.querySelectorAll(".accordion");
+    acc.forEach(btn => {
+      btn.addEventListener("click", function() {
+        this.classList.toggle("active");
+        const panel = this.nextElementSibling;
+        panel.style.display = panel.style.display === "block" ? "none" : "block";
+      });
+    });
+  </script>
+</body>
+</html>
