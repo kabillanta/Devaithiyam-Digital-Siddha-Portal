@@ -22,24 +22,6 @@ This project is a web application dedicated to providing information about tradi
 **Frontend:**
 -   **Markup/Styling**: HTML5, CSS3
 -   **Interactivity**: Vanilla JavaScript
--   **Markdown Rendering**: `marked.js`
--   **Icons**: Font Awesome
-
-## 📂 Project Structure
-
-
-.
-├── .venv/                  # Virtual environment directory
-├── corpus/
-│   └── cleaned_chatbot.csv # The cleaned knowledge base for the RAG model
-├── .env                    # Environment variables (API keys)
-├── .gitignore              # Files to be ignored by Git
-├── main.py                 # The FastAPI backend application
-├── chatbot.html            # The chatbot interface page
-├── index.html              # The main landing page
-├── script.js               # JavaScript for the chatbot frontend
-├── style.css               # CSS styles for all pages
-└── README.md               # This file
 
 
 ## 🚀 Getting Started
@@ -115,31 +97,6 @@ Follow these instructions to get a copy of the project up and running on your lo
 3.  Press "Send" or hit Enter.
 4.  The chatbot will respond based on its knowledge base, and you can ask follow-up questions.
 
-## 📝 API Endpoint
-
-The backend provides one main endpoint:
-
-### `POST /chat`
-
--   **Summary**: Receives a question and chat history, returns the bot's answer.
--   **Request Body**:
-    ```json
-    {
-      "question": "I have a cough and a fever",
-      "chat_history": [
-        ["user's previous question", "bot's previous answer"]
-      ]
-    }
-    ```
--   **Response Body**:
-    ```json
-    {
-      "answer": "The bot's generated answer in Markdown format.",
-      "sources": [
-        "The source text chunk used to generate the answer."
-      ]
-    }
-    ```
 
 ## 📄 Data Source
 
@@ -147,4 +104,4 @@ The knowledge base for this chatbot is sourced from the `cleaned_chatbot.csv` fi
 
 ---
 
-**Disclaimer**: This chatbot is for informational and educational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of a qualified health provider with any questions you may have regarding a medical condition.
+**Disclaimer**: This chatbot is for informational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of a qualified health provider with any questions you may have regarding a medical condition.
