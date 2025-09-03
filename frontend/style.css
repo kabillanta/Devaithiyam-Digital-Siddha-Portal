@@ -259,3 +259,340 @@ footer {
   padding: 1.5rem;
   font-size: 0.9rem;
 }
+
+/* Search Bar Styles */
+.search-container {
+  margin-bottom: 30px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+}
+
+.search-bar {
+  flex: 1;
+  padding: 12px 20px;
+  border: 2px solid var(--primary-color);
+  border-radius: 25px 0 0 25px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.search-bar:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(163, 216, 184, 0.2);
+}
+
+.search-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 0 25px 25px 0;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.search-button:hover {
+  background-color: #277346;
+}
+
+/* Dosha Blocks Styles */
+.dosha-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.doshaBlock {
+  cursor: pointer;
+  padding: 50px 20px;
+  flex: 1;
+  background: #e7f5e6;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.doshaBlock:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  background: #d0ead0;
+}
+
+/* Disease Sections */
+.disease-section {
+  display: none;
+  margin-top: 30px;
+  padding: 20px;
+  background: #f9fff9;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.disease-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.disease-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.disease-item {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  border-left: 4px solid var(--primary-color);
+}
+
+.disease-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  background-color: #f0f8f0;
+}
+
+.disease-name {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: var(--primary-color);
+}
+
+.disease-symptoms {
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
+}
+
+.diseases-count {
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+  margin-bottom: 15px;
+  background: #f0f8f0;
+  border-radius: 5px;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 25px;
+  width: 80%;
+  max-width: 900px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.close-button {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #777;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.modal-section {
+  background-color: #f9fff9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.modal-section h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+/* Dosha type styles */
+.dosha-type {
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin: 15px 0;
+  font-weight: bold;
+  text-align: center;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dosha-type::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.dosha-type.kabam {
+  background-color: #e6f2ff;
+  color: #0056b3;
+}
+.dosha-type.kabam::before {
+  background-color: #0056b3;
+}
+
+.dosha-type.pitham, .dosha-type.pittam {
+  background-color: #fff3cd;
+  color: #856404;
+}
+.dosha-type.pitham::before, .dosha-type.pittam::before {
+  background-color: #856404;
+}
+
+.dosha-type.vatham {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+.dosha-type.vatham::before {
+  background-color: #2e7d32;
+}
+
+.dosha-type.unknown {
+  background-color: #f5f5f5;
+  color: #616161;
+}
+.dosha-type.unknown::before {
+  background-color: #616161;
+}
+
+/* Badge for dosha type in search results */
+.dosha-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  margin-right: 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Loading indicator styles */
+.loading-indicator {
+  padding: 20px;
+  text-align: center;
+  color: var(--primary-color);
+  font-style: italic;
+  position: relative;
+  padding-left: 30px;
+}
+
+.loading-indicator::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  margin-left: -15px;
+  top: 50%;
+  margin-top: -15px;
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error message styles */
+.error-message {
+  padding: 15px;
+  background-color: #ffebee;
+  border-left: 4px solid #f44336;
+  margin: 15px 0;
+  color: #7d1a0c;
+  border-radius: 4px;
+}
+
+.no-results {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.dosha-badge.kabam {
+  background-color: #d4e6f1;
+  color: #2874a6;
+}
+
+.dosha-badge.pitham, .dosha-badge.pittam {
+  background-color: #f9e79f;
+  color: #b7950b;
+}
+
+.dosha-badge.vatham {
+  background-color: #d5f5e3;
+  color: #196f3d;
+}
+
+.dosha-badge.unknown {
+  background-color: #e5e7e9;
+  color: #566573;
+}
+
+/* Improve disease item styling for search results */
+.disease-item {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+  }
+}

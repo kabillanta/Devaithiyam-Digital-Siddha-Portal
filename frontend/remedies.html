@@ -3,7 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <title>Remedies | Siddha Medicine</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    /* Additional styles for remedy cards */
+    .remedy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    
+    .remedy-card {
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .remedy-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .remedy-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 15px;
+      border-bottom: 2px solid var(--accent-color);
+    }
+    
+    .remedy-header h3 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    
+    .remedy-content {
+      padding: 15px;
+      flex: 1;
+    }
+    
+    .remedy-content p {
+      margin: 8px 0;
+    }
+    
+    .remedy-label {
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+    
+    .remedy-footer {
+      padding: 10px 15px;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: flex-end;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .details-button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .details-button:hover {
+      background-color: var(--accent-color);
+    }
+    
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100px;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .search-results {
+      margin-top: 20px;
+    }
+    
+    .no-results {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    
+    /* Enhanced modal styles */
+    .modal-content {
+      max-width: 700px;
+      border-radius: 10px;
+    }
+    
+    .modal-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px 10px 0 0;
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .modal-section {
+      margin-bottom: 20px;
+    }
+    
+    .modal-section h3 {
+      color: var(--primary-color);
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
   <header class="navbar">
@@ -18,19 +149,375 @@
     </nav>
   </header>
 
-  <main class="features">
-    <div class="card">
-      <h3>Whooping Cough</h3>
-      <p>Home Remedy: Vasambu powder + honey<br/>External: Karpoorathi Thailam<br/>Medicine: Adathodai Manappagu</p>
+  <main>
+    <div class="search-container" style="padding: 2rem; padding-bottom: 0;">
+      <input type="text" id="searchInput" placeholder="Search remedies..." class="search-bar">
+      <button id="searchButton" class="search-button"><i class="fa fa-search"></i> Search</button>
     </div>
-    <div class="card">
-      <h3>Constipation</h3>
-      <p>Remedy: Kadukkai powder with warm water<br/>Medicine: Agasthiyar churnam</p>
+    
+    <!-- Search results section -->
+    <div id="search-results-section" class="disease-section" style="display: none;">
+      <h2>Search Results</h2>
+      <div id="search-results-list" class="remedy-grid"></div>
+    </div>
+    
+    <!-- All remedies displayed directly -->
+    <div class="features" id="all-remedies">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- Remedy detail modal -->
+    <div id="remedy-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="close-button">&times;</span>
+          <h2 id="modal-remedy-title"></h2>
+        </div>
+        <div class="modal-body">
+          <div class="modal-section">
+            <h3>Preparation</h3>
+            <p id="modal-preparation"></p>
+          </div>
+          <div class="modal-section">
+            <h3>Usage</h3>
+            <p id="modal-usage"></p>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
   <footer>
     <p>📚 References: Siddha Texts, AYUSH</p>
   </footer>
+
+  <script>
+    // Global variables to store our data
+    let allRemedies = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('searchInput');
+      const searchButton = document.getElementById('searchButton');
+      const modal = document.getElementById('remedy-modal');
+      const closeButton = document.querySelector('.close-button');
+      
+      // Load remedies data directly from CSV file
+      loadRemedyCSV();
+      
+      // Setup event listeners
+      searchButton.addEventListener('click', searchRemedies);
+      
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          searchRemedies();
+        }
+      });
+      
+      // Close the modal when clicking the close button or outside the modal
+      closeButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    });
+
+    // Function to load the remedy CSV file
+    async function loadRemedyCSV() {
+      try {
+        console.log('Attempting to load remedy CSV...');
+        
+        // Try multiple possible paths to the CSV file
+        const possiblePaths = [
+          '../backend/remedy.csv',
+          './backend/remedy.csv',
+          'remedy.csv'
+        ];
+        
+        let csvData = null;
+        let loadedPath = null;
+        
+        for (const path of possiblePaths) {
+          try {
+            const response = await fetch(path);
+            if (response.ok) {
+              csvData = await response.text();
+              loadedPath = path;
+              break;
+            }
+          } catch (e) {
+            console.warn(`Failed to load CSV from ${path}: ${e.message}`);
+          }
+        }
+        
+        if (!csvData) {
+          throw new Error('Could not load remedy CSV from any location');
+        }
+        
+        console.log(`Successfully loaded remedy CSV from ${loadedPath}`);
+        processRemedyCSV(csvData);
+      } catch (error) {
+        console.error('Error loading CSV file:', error);
+        // If loading fails, add some sample data
+        addSampleRemedies();
+      }
+    }
+    
+    // Process the loaded CSV data
+    function processRemedyCSV(csvData) {
+      try {
+        // Parse CSV data
+        const rows = csvData.split('\n');
+        const headers = parseCSVHeader(rows[0]);
+        
+        // Process each row
+        for (let i = 1; i < rows.length; i++) {
+          if (!rows[i].trim()) continue;
+          
+          // Split the row but handle cases where commas are in quoted fields
+          const columns = parseCSVRow(rows[i]);
+          
+          if (columns.length >= 3) {  // At least name, preparation, and usage
+            const remedyName = columns[0] || 'Unknown Remedy';
+            const preparation = columns[1] || 'No preparation information';
+            const usage = columns[2] || 'No usage information';
+            
+            // Create a remedy object
+            const remedy = {
+              name: remedyName,
+              preparation: preparation,
+              usage: usage
+            };
+            
+            // Add to all remedies
+            allRemedies.push(remedy);
+          }
+        }
+        
+        console.log('Remedies loaded successfully:', allRemedies.length, 'total');
+        
+        // Display all remedies immediately
+        displayRemedies(allRemedies);
+      } catch (parseError) {
+        console.error('Error parsing CSV data:', parseError);
+        addSampleRemedies();
+      }
+    }
+    
+    // Parse CSV header row
+    function parseCSVHeader(headerRow) {
+      const headers = parseCSVRow(headerRow);
+      return headers.map(header => header.trim());
+    }
+    
+    // Helper function to add sample remedies if CSV loading fails
+    function addSampleRemedies() {
+      console.log('Using sample remedy data as fallback');
+      const sampleRemedies = [
+        {
+          name: 'Thulasi Kashayam',
+          preparation: 'Boil 10–12 Tulsi leaves with 1 tsp pepper and dry ginger in 2 cups water; reduce to 1 cup.',
+          usage: 'Drink warm once or twice daily for cold, cough, and mild fever.'
+        },
+        {
+          name: 'Manjal Paal (Turmeric Milk)',
+          preparation: 'Mix ½ tsp turmeric powder in warm milk; add a pinch of pepper if desired.',
+          usage: 'Drink at bedtime for cough, sore throat, immunity, and better sleep.'
+        },
+        {
+          name: 'Inji Kashayam (Ginger Decoction)',
+          preparation: 'Crush 1-inch ginger, boil in 2 cups water until reduced to 1 cup, then strain.',
+          usage: 'Take warm for indigestion, nausea, bloating, and cold relief.'
+        },
+        {
+          name: 'Veppilai Paste (Neem Leaf Paste)',
+          preparation: 'Grind fresh neem leaves with water to make a paste.',
+          usage: 'Apply externally on pimples, rashes, and wounds.'
+        },
+        {
+          name: 'Nochi Leaf Steam',
+          preparation: 'Boil Nochi leaves in water and inhale the steam.',
+          usage: 'Relieves sinusitis, headache, and nasal congestion.'
+        }
+      ];
+      
+      // Set all remedies
+      allRemedies = sampleRemedies;
+      
+      // Display the remedies immediately
+      displayRemedies(sampleRemedies);
+    }
+    
+    // Helper function to parse CSV row handling quoted fields
+    function parseCSVRow(row) {
+      const result = [];
+      let insideQuotes = false;
+      let currentField = '';
+      
+      for (let i = 0; i < row.length; i++) {
+        const char = row[i];
+        
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === ',' && !insideQuotes) {
+          result.push(currentField);
+          currentField = '';
+        } else {
+          currentField += char;
+        }
+      }
+      
+      result.push(currentField); // Add the last field
+      return result;
+    }
+    
+    // Display all remedies in a grid layout
+    function displayRemedies(remedies) {
+      const container = document.getElementById('all-remedies');
+      container.innerHTML = '';
+      
+      if (!remedies || remedies.length === 0) {
+        container.innerHTML = '<div class="no-results">No remedies found</div>';
+        return;
+      }
+      
+      const remedyGrid = document.createElement('div');
+      remedyGrid.className = 'remedy-grid';
+      
+      remedies.forEach(remedy => {
+        const card = createRemedyCard(remedy);
+        remedyGrid.appendChild(card);
+      });
+      
+      container.appendChild(remedyGrid);
+    }
+    
+    // Create a remedy card element
+    function createRemedyCard(remedy) {
+      const card = document.createElement('div');
+      card.className = 'remedy-card';
+      
+      const header = document.createElement('div');
+      header.className = 'remedy-header';
+      
+      const title = document.createElement('h3');
+      title.textContent = remedy.name;
+      header.appendChild(title);
+      
+      const content = document.createElement('div');
+      content.className = 'remedy-content';
+      
+      // Add preparation snippet (limited to first 80 chars)
+      const preparationText = remedy.preparation || 'No preparation details available';
+      const preparationSnippet = preparationText.length > 80 
+        ? preparationText.substring(0, 80) + '...' 
+        : preparationText;
+        
+      const preparation = document.createElement('p');
+      preparation.innerHTML = `<span class="remedy-label">Preparation:</span> ${preparationSnippet}`;
+      content.appendChild(preparation);
+      
+      const footer = document.createElement('div');
+      footer.className = 'remedy-footer';
+      
+      const detailsButton = document.createElement('button');
+      detailsButton.className = 'details-button';
+      detailsButton.textContent = 'More Info';
+      detailsButton.addEventListener('click', () => showRemedyDetails(remedy));
+      footer.appendChild(detailsButton);
+      
+      card.appendChild(header);
+      card.appendChild(content);
+      card.appendChild(footer);
+      
+      return card;
+    }
+    
+    // Helper function to parse CSV row handling quoted fields
+    function parseCSVRow(row) {
+      const result = [];
+      let insideQuotes = false;
+      let currentField = '';
+      
+      for (let i = 0; i < row.length; i++) {
+        const char = row[i];
+        
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === ',' && !insideQuotes) {
+          result.push(currentField);
+          currentField = '';
+        } else {
+          currentField += char;
+        }
+      }
+      
+      result.push(currentField); // Add the last field
+      return result;
+    }
+
+    // Function to search remedies
+    function searchRemedies() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      
+      if (query === '') {
+        // If search is empty, show all remedies
+        document.getElementById('search-results-section').style.display = 'none';
+        document.getElementById('all-remedies').style.display = 'block';
+        return;
+      }
+      
+      console.log(`Searching for: "${query}"`);
+      
+      // Hide the default view and show search results
+      document.getElementById('all-remedies').style.display = 'none';
+      
+      // Search through all remedies
+      const results = allRemedies.filter(remedy => 
+        remedy.name.toLowerCase().includes(query) || 
+        remedy.preparation.toLowerCase().includes(query) || 
+        remedy.usage.toLowerCase().includes(query)
+      );
+      
+      // Show search results section
+      const searchResultsSection = document.getElementById('search-results-section');
+      const searchResultsList = document.getElementById('search-results-list');
+      searchResultsSection.style.display = 'block';
+      
+      if (results.length > 0) {
+        console.log(`Found ${results.length} results matching "${query}"`);
+        searchResultsList.innerHTML = '';
+        
+        // Display all matching results
+        results.forEach(remedy => {
+          const card = createRemedyCard(remedy);
+          searchResultsList.appendChild(card);
+        });
+      } else {
+        console.log(`No results found for "${query}"`);
+        searchResultsList.innerHTML = '<div class="no-results">No remedies found matching your search</div>';
+      }
+      
+      // Scroll to search results
+      searchResultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Function to show remedy details in modal
+    function showRemedyDetails(remedy) {
+      console.log('Showing details for:', remedy.name);
+      
+      document.getElementById('modal-remedy-title').textContent = remedy.name;
+      document.getElementById('modal-preparation').textContent = remedy.preparation || 'Not specified';
+      document.getElementById('modal-usage').textContent = remedy.usage || 'Not specified';
+      
+      // Show the modal
+      document.getElementById('remedy-modal').style.display = 'block';
+    }
+  </script>
 </body>
 </html>

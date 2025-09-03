@@ -9,12 +9,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const question = userInput.value.trim();
         if (!question) return;
 
+        console.log("Sending question:", question);
         appendMessage(question, "user-message", true);
         userInput.value = "";
         const thinkingIndicator = appendMessage("Thinking...", "bot-message thinking", false);
 
         try {
-            const response = await fetch("http://127.0.0.1:8080/chat", {
+            console.log("Making API request to http://127.0.0.1:8000/chat");
+            const response = await fetch("http://127.0.0.1:8000/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -23,24 +25,47 @@ document.addEventListener("DOMContentLoaded", () => {
                 }),
             });
 
-            if (!response.ok) throw new Error("Network response was not ok.");
+            console.log("Response status:", response.status);
+            console.log("Response ok:", response.ok);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Response error:", errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
 
             const data = await response.json();
+            console.log("Received data:", data);
+            
+            if (!data.answer) {
+                throw new Error("No answer received from server");
+            }
             
             chatBox.removeChild(thinkingIndicator);
-            // UPDATED: Use marked.parse() on the bot's answer
-            appendMessage(marked.parse(data.answer), "bot-message", false);
+            
+            // Check if marked is available
+            if (typeof marked !== 'undefined' && marked.parse) {
+                console.log("Using marked.parse for markdown");
+                appendMessage(marked.parse(data.answer), "bot-message", false);
+            } else {
+                console.log("Marked not available, using plain text");
+                appendMessage(data.answer, "bot-message", false);
+            }
 
             chatHistory.push([question, data.answer]);
+            console.log("Updated chat history:", chatHistory);
 
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Complete error object:", error);
+            console.error("Error message:", error.message);
             chatBox.removeChild(thinkingIndicator);
-            appendMessage("Sorry, something went wrong. Please try again.", "bot-message error", false);
+            appendMessage("Sorry, something went wrong. Please try again. Error: " + error.message, "bot-message error", false);
         }
     };
 
     const appendMessage = (text, className, isUser) => {
+        console.log("Appending message:", { text: text.substring(0, 100) + "...", className, isUser });
+        
         const messageDiv = document.createElement("div");
         messageDiv.className = `chat-message ${className}`;
         
@@ -53,6 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.innerHTML = `${iconHtml}<div class="message-content">${contentHtml}</div>`;
         chatBox.appendChild(messageDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
+        
+        console.log("Message appended successfully");
         return messageDiv;
     };
 

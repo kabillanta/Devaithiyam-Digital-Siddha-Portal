@@ -3,11 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Diseases | Siddha Medicine</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .accordion { cursor: pointer; padding: 10px; background: #e7f5e6; border: none; outline: none; transition: 0.3s; margin-top: 10px; border-radius: 6px; }
-    .panel { padding: 0 15px; display: none; background-color: #f4fdf3; border-left: 4px solid #4caf50; }
-  </style>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
   <header class="navbar">
@@ -23,14 +20,58 @@
   </header>
 
   <main style="padding: 2rem">
-    <button class="accordion">Whooping Cough</button>
-    <div class="panel"><p>Symptoms: Dry cough, wheezing, chest pain.<br/>Category: Respiratory</p></div>
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search diseases..." class="search-bar">
+      <button id="searchButton" class="search-button"><i class="fa fa-search"></i> Search</button>
+    </div>
+    
+    <div class="dosha-container">
+      <div class="doshaBlock" onclick="showDiseases('kabam')">Kabam</div>
+      <div class="doshaBlock" onclick="showDiseases('pitham')">Pitham</div>
+      <div class="doshaBlock" onclick="showDiseases('vatham')">Vatham</div>
+    </div>
 
-    <button class="accordion">Skin Rash</button>
-    <div class="panel"><p>Symptoms: Itching, redness, irritation.<br/>Category: Dermatological</p></div>
+    <!-- Disease lists for each dosha type - initially hidden -->
+    <div id="kabam-section" class="disease-section">
+      <h2>Kabam Diseases</h2>
+      <div id="kabam-diseases" class="disease-list"></div>
+    </div>
 
-    <button class="accordion">Constipation</button>
-    <div class="panel"><p>Symptoms: Irregular motion, stomach bloating.<br/>Category: Digestive</p></div>
+    <div id="pitham-section" class="disease-section">
+      <h2>Pitham Diseases</h2>
+      <div id="pitham-diseases" class="disease-list"></div>
+    </div>
+
+    <div id="vatham-section" class="disease-section">
+      <h2>Vatham Diseases</h2>
+      <div id="vatham-diseases" class="disease-list"></div>
+    </div>
+
+    <!-- Disease detail modal -->
+    <div id="disease-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2 id="modal-disease-title"></h2>
+        <div class="modal-grid">
+          <div class="modal-section">
+            <h3>Symptoms</h3>
+            <p id="modal-symptoms"></p>
+          </div>
+          <div class="modal-section">
+            <h3>Remedy</h3>
+            <p id="modal-remedy"></p>
+          </div>
+          <div class="modal-section">
+            <h3>Prepared Medicines</h3>
+            <p id="modal-prepared-medicines"></p>
+          </div>
+          <div class="modal-section">
+            <h3>External Medicines</h3>
+            <p id="modal-external-medicines"></p>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <footer>
@@ -38,14 +79,540 @@
   </footer>
 
   <script>
-    const acc = document.querySelectorAll(".accordion");
-    acc.forEach(btn => {
-      btn.addEventListener("click", function() {
-        this.classList.toggle("active");
-        const panel = this.nextElementSibling;
-        panel.style.display = panel.style.display === "block" ? "none" : "block";
+    // Global variables to store our data
+    let allDiseases = [];
+    let doshaMap = {
+      'kabam': [],
+      'pitham': [],
+      'vatham': []
+    };
+    
+    // API Base URL - change this to match your server address
+    const API_BASE_URL = 'http://127.0.0.1:8000';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('searchInput');
+      const searchButton = document.getElementById('searchButton');
+      const modal = document.getElementById('disease-modal');
+      const closeButton = document.querySelector('.close-button');
+      
+      // Pre-fetch all diseases data for search functionality
+      fetchAllDiseases();
+      
+      // Setup event listeners
+      searchButton.addEventListener('click', searchDiseases);
+      
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          searchDiseases();
+        }
+      });
+      
+      // Close the modal when clicking the close button or outside the modal
+      closeButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
       });
     });
+
+    // Function to fetch all diseases from API for search functionality
+    async function fetchAllDiseases() {
+      try {
+        console.log('Fetching all diseases data from API...');
+        
+        const response = await fetch(`${API_BASE_URL}/diseases/all`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch diseases: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Successfully loaded ${data.count} diseases from API`);
+        
+        // Store all diseases for search functionality
+        allDiseases = data.diseases.map(formatDiseaseFromAPI);
+        
+      } catch (error) {
+        console.error('Error fetching all diseases:', error);
+        // Fall back to sample data if API fails
+        loadSampleDiseaseData();
+      }
+    }
+    
+    // Format disease data from API response
+    function formatDiseaseFromAPI(apiDisease) {
+      // This function converts the API response format to our frontend format
+      const diseaseName = apiDisease.disease || apiDisease.name || 'Unknown Disease';
+      
+      return {
+        name: diseaseName,
+        symptoms: apiDisease.sign_and_symptoms || '',
+        remedy: apiDisease.remedy || '',
+        preparedMedicines: apiDisease.prepared_medicines || '',
+        externalMedicines: apiDisease.external_medicines || '',
+        others: apiDisease.others || '',
+        type: apiDisease.type?.toLowerCase() || 'unknown'
+      };
+    }
+    
+    // Function to load sample disease data if API fails
+    function loadSampleDiseaseData() {
+      const sampleDiseases = [
+        {
+          name: "NON-SPECIFIC FEVERS",
+          symptoms: "Rise in temperature, headache, running in the nose, cough, pain all over the body",
+          remedy: "Nilavembu kudineer",
+          preparedMedicines: "Chandachandrodayam pills",
+          externalMedicines: "",
+          others: "",
+          type: "kabam"
+        },
+        {
+          name: "WHOOPING COUGH",
+          symptoms: "Paraoxysmal cough with whoop, vomiting",
+          remedy: "Vasambu powder",
+          preparedMedicines: "Adathodai manappagu",
+          externalMedicines: "Karpoorathi thailam",
+          others: "",
+          type: "kabam"
+        },
+        {
+          name: "TONSILLITIS",
+          symptoms: "Swelling and redness of both tonsils, pain on swallowing",
+          remedy: "Karpooravalli",
+          preparedMedicines: "Sangu barpam",
+          externalMedicines: "",
+          others: "",
+          type: "pitham"
+        },
+        {
+          name: "GASTRITIS",
+          symptoms: "Loss of appetite, nausea, discomfort in the epigastrium",
+          remedy: "Milagu seeraga kudineer",
+          preparedMedicines: "Uppu chenduram",
+          externalMedicines: "",
+          others: "",
+          type: "pitham"
+        },
+        {
+          name: "GINGIVITIS",
+          symptoms: "The gums are swollen, painful and reddish",
+          remedy: "Thripalai koppuli kudineer",
+          preparedMedicines: "",
+          externalMedicines: "",
+          others: "",
+          type: "vatham"
+        },
+        {
+          name: "CONSTIPATION",
+          symptoms: "Unable to pass motion in the normal course",
+          remedy: "Kadukkai kadineer",
+          preparedMedicines: "Nilavagai choornam",
+          externalMedicines: "",
+          others: "",
+          type: "vatham"
+        }
+      ];
+      
+      // Clear any existing data
+      allDiseases = [];
+      doshaMap = {
+        'kabam': [],
+        'pitham': [],
+        'vatham': []
+      };
+      
+      // Add sample diseases to appropriate categories
+      sampleDiseases.forEach(disease => {
+        allDiseases.push(disease);
+        
+        if (disease.type === 'kabam') {
+          doshaMap.kabam.push(disease);
+        } else if (disease.type === 'pitham' || disease.type === 'pittam') {
+          doshaMap.pitham.push(disease);
+        } else if (disease.type === 'vatham') {
+          doshaMap.vatham.push(disease);
+        }
+      });
+      
+      console.log('Sample data loaded:', allDiseases.length, 'diseases');
+    }
+
+    // Function to show diseases by dosha type (using API)
+    async function showDiseases(doshaType) {
+      // Hide all sections first
+      document.querySelectorAll('.disease-section').forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      // Hide search results if visible
+      const searchResultsSection = document.getElementById('search-results-section');
+      if (searchResultsSection) {
+        searchResultsSection.style.display = 'none';
+      }
+      
+      // Show the selected dosha section
+      const sectionId = `${doshaType}-section`;
+      const diseaseListId = `${doshaType}-diseases`;
+      
+      const section = document.getElementById(sectionId);
+      const diseaseList = document.getElementById(diseaseListId);
+      
+      if (!section || !diseaseList) return;
+      
+      // Clear previous content
+      diseaseList.innerHTML = '<div class="loading-indicator">Loading diseases...</div>';
+      
+      // Show the section while loading
+      section.style.display = 'block';
+      
+      try {
+        console.log(`Fetching ${doshaType} diseases from API...`);
+        console.log(`Request URL: ${API_BASE_URL}/diseases/${doshaType}`);
+        
+        // Debug: check if API_BASE_URL is correct
+        console.log('API Base URL:', API_BASE_URL);
+        
+        const response = await fetch(`${API_BASE_URL}/diseases/${doshaType}`);
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Fetched ${data.count} ${doshaType} diseases from API`);
+        console.log('API response data:', data);
+        
+        // Format diseases for display
+        const diseases = data.diseases.map(formatDiseaseFromAPI);
+        
+        // Update our cache for this dosha type
+        doshaMap[doshaType] = diseases;
+        
+        // Clear loading indicator
+        diseaseList.innerHTML = '';
+        
+        if (diseases.length === 0) {
+          diseaseList.innerHTML = '<p>No diseases found for this dosha type.</p>';
+        } else {
+          // Create a counter to display
+          const countHeader = document.createElement('div');
+          countHeader.className = 'diseases-count';
+          countHeader.textContent = `Found ${diseases.length} diseases classified as ${doshaType.charAt(0).toUpperCase() + doshaType.slice(1)}`;
+          diseaseList.appendChild(countHeader);
+          
+          // Create disease items
+          diseases.forEach(disease => {
+            const diseaseItem = document.createElement('div');
+            diseaseItem.className = 'disease-item';
+            
+            // Add symptom preview if available
+            let diseaseContent = '';
+            if (disease.symptoms && disease.symptoms.length > 0) {
+              // Get first 50 characters of symptoms or up to the first comma
+              let symptomsPreview = disease.symptoms;
+              if (symptomsPreview.length > 60) {
+                const commaIndex = symptomsPreview.indexOf(',', 20);
+                if (commaIndex > 0 && commaIndex < 60) {
+                  symptomsPreview = symptomsPreview.substring(0, commaIndex);
+                } else {
+                  symptomsPreview = symptomsPreview.substring(0, 60) + '...';
+                }
+              }
+              
+              diseaseContent = `
+                <div class="disease-name">${disease.name}</div>
+                <div class="disease-symptoms">${symptomsPreview}</div>
+              `;
+            } else {
+              diseaseContent = `<div class="disease-name">${disease.name}</div>`;
+            }
+            
+            diseaseItem.innerHTML = diseaseContent;
+            
+            // Add click event to show disease details
+            diseaseItem.addEventListener('click', function() {
+              showDiseaseDetails(disease);
+            });
+            
+            diseaseList.appendChild(diseaseItem);
+          });
+        }
+      } catch (error) {
+        console.error(`Error fetching ${doshaType} diseases:`, error);
+        
+        // Show error message
+        diseaseList.innerHTML = `
+          <div class="error-message">
+            <p>Failed to load diseases from the server.</p>
+            <p>Error: ${error.message}</p>
+            <p>Using cached data if available...</p>
+          </div>
+        `;
+        
+        // Try to use cached data if available
+        const cachedDiseases = doshaMap[doshaType];
+        if (cachedDiseases && cachedDiseases.length > 0) {
+          displayDiseaseList(cachedDiseases, doshaType, diseaseList);
+        }
+      }
+      
+      // Scroll to the section
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Helper function to display diseases in a list
+    function displayDiseaseList(diseases, doshaType, containerElement) {
+      // Create a counter to display
+      const countHeader = document.createElement('div');
+      countHeader.className = 'diseases-count';
+      countHeader.textContent = `Found ${diseases.length} diseases classified as ${doshaType.charAt(0).toUpperCase() + doshaType.slice(1)}`;
+      containerElement.appendChild(countHeader);
+      
+      // Create disease items
+      diseases.forEach(disease => {
+        const diseaseItem = document.createElement('div');
+        diseaseItem.className = 'disease-item';
+        
+        // Add symptom preview if available
+        let diseaseContent = '';
+        if (disease.symptoms && disease.symptoms.length > 0) {
+          // Get first 50 characters of symptoms or up to the first comma
+          let symptomsPreview = disease.symptoms;
+          if (symptomsPreview.length > 60) {
+            const commaIndex = symptomsPreview.indexOf(',', 20);
+            if (commaIndex > 0 && commaIndex < 60) {
+              symptomsPreview = symptomsPreview.substring(0, commaIndex);
+            } else {
+              symptomsPreview = symptomsPreview.substring(0, 60) + '...';
+            }
+          }
+          
+          diseaseContent = `
+            <div class="disease-name">${disease.name}</div>
+            <div class="disease-symptoms">${symptomsPreview}</div>
+          `;
+        } else {
+          diseaseContent = `<div class="disease-name">${disease.name}</div>`;
+        }
+        
+        diseaseItem.innerHTML = diseaseContent;
+        
+        // Add click event to show disease details
+        diseaseItem.addEventListener('click', function() {
+          showDiseaseDetails(disease);
+        });
+        
+        containerElement.appendChild(diseaseItem);
+      });
+    }
+
+    // Function to show disease details in modal
+    function showDiseaseDetails(disease) {
+      document.getElementById('modal-disease-title').textContent = disease.name;
+      document.getElementById('modal-symptoms').textContent = disease.symptoms || 'Not specified';
+      
+      // Format the remedy text to make it more readable
+      let remedyText = disease.remedy || 'Not specified';
+      remedyText = formatTextForDisplay(remedyText);
+      document.getElementById('modal-remedy').innerHTML = remedyText;
+      
+      // Format the prepared medicines text
+      let preparedMedText = disease.preparedMedicines || 'Not specified';
+      preparedMedText = formatTextForDisplay(preparedMedText);
+      document.getElementById('modal-prepared-medicines').innerHTML = preparedMedText;
+      
+      // Format the external medicines text
+      let externalMedText = disease.externalMedicines || 'Not specified';
+      externalMedText = formatTextForDisplay(externalMedText);
+      document.getElementById('modal-external-medicines').innerHTML = externalMedText;
+      
+      // Add dosha type information with color coding
+      const typeName = disease.type ? disease.type.toLowerCase() : 'unknown';
+      const typeDisplayName = disease.type ? disease.type.charAt(0).toUpperCase() + disease.type.slice(1) : 'Unknown';
+      
+      const doshaType = document.createElement('div');
+      doshaType.className = `dosha-type ${typeName}`;
+      doshaType.textContent = `Dosha Type: ${typeDisplayName}`;
+      
+      // Insert dosha type before the first section
+      const modalContent = document.querySelector('.modal-content');
+      const modalGrid = document.querySelector('.modal-grid');
+      if (modalContent && modalGrid) {
+        const existingDoshaType = modalContent.querySelector('.dosha-type');
+        if (existingDoshaType) {
+          existingDoshaType.className = `dosha-type ${typeName}`;
+          existingDoshaType.textContent = `Dosha Type: ${typeDisplayName}`;
+        } else {
+          modalContent.insertBefore(doshaType, modalGrid);
+        }
+      }
+      
+      // Show the modal
+      document.getElementById('disease-modal').style.display = 'block';
+    }
+    
+    // Helper function to format text with line breaks and lists
+    function formatTextForDisplay(text) {
+      if (!text || text === 'Not specified') return text;
+      
+      // Replace line breaks with HTML breaks
+      let formattedText = text.replace(/\n/g, '<br>');
+      
+      // Format numbered lists more nicely
+      formattedText = formattedText.replace(/(\d+\.\s[^\n.]+\.)/g, '<li>$1</li>');
+      
+      // If we added list items, wrap in ul
+      if (formattedText.includes('<li>')) {
+        formattedText = `<ul style="padding-left: 20px; margin-top: 5px;">${formattedText}</ul>`;
+      }
+      
+      return formattedText;
+    }
+
+    // Function to search diseases using the API
+    async function searchDiseases() {
+      const query = document.getElementById('searchInput').value.trim();
+      
+      if (query === '') {
+        alert('Please enter a disease or symptom to search');
+        return;
+      }
+      
+      // Hide all sections first
+      document.querySelectorAll('.disease-section').forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      // Create or get the search results section
+      let searchResultsSection = document.getElementById('search-results-section');
+      if (!searchResultsSection) {
+        searchResultsSection = document.createElement('div');
+        searchResultsSection.id = 'search-results-section';
+        searchResultsSection.className = 'disease-section';
+        
+        const heading = document.createElement('h2');
+        heading.textContent = 'Search Results';
+        searchResultsSection.appendChild(heading);
+        
+        const resultsList = document.createElement('div');
+        resultsList.id = 'search-results-list';
+        resultsList.className = 'disease-list';
+        searchResultsSection.appendChild(resultsList);
+        
+        const mainElement = document.querySelector('main');
+        mainElement.appendChild(searchResultsSection);
+      }
+      
+      // Display loading indicator
+      const resultsList = document.getElementById('search-results-list');
+      resultsList.innerHTML = '<div class="loading-indicator">Searching...</div>';
+      searchResultsSection.style.display = 'block';
+      
+      try {
+        // Try to use the API endpoint for search
+        console.log(`Searching API for "${query}"...`);
+        const response = await fetch(`${API_BASE_URL}/diseases/search?query=${encodeURIComponent(query)}`);
+        
+        if (!response.ok) {
+          throw new Error(`API search error: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const results = data.diseases.map(formatDiseaseFromAPI);
+        
+        console.log(`Found ${results.length} results from API search`);
+        displaySearchResults(results, query, resultsList);
+        
+      } catch (error) {
+        console.error('Error searching via API:', error);
+        resultsList.innerHTML = `
+          <div class="error-message">
+            <p>Failed to search using the API.</p>
+            <p>Error: ${error.message}</p>
+            <p>Falling back to client-side search...</p>
+          </div>
+        `;
+        
+        // Fall back to client-side search if API fails
+        setTimeout(() => {
+          searchLocalDiseases(query, resultsList);
+        }, 1000);
+      }
+      
+      // Scroll to the section
+      searchResultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Fallback function to search locally if API fails
+    function searchLocalDiseases(query, resultsList) {
+      query = query.toLowerCase().trim();
+      
+      // Filter the locally cached diseases
+      const results = allDiseases.filter(disease => 
+        disease.name.toLowerCase().includes(query) || 
+        disease.symptoms.toLowerCase().includes(query) ||
+        (disease.remedy && disease.remedy.toLowerCase().includes(query))
+      );
+      
+      // Display the results
+      displaySearchResults(results, query, resultsList, true);
+    }
+    
+    // Display search results in the UI
+    function displaySearchResults(results, query, resultsList, isLocal = false) {
+      resultsList.innerHTML = '';
+      
+      if (results.length === 0) {
+        resultsList.innerHTML = '<div class="no-results">No diseases found matching your search</div>';
+        return;
+      }
+      
+      // Create a counter to display
+      const countHeader = document.createElement('div');
+      countHeader.className = 'diseases-count';
+      countHeader.textContent = `Found ${results.length} results for "${query}"${isLocal ? " (local search)" : ""}`;
+      resultsList.appendChild(countHeader);
+      
+      // Create result items
+      results.forEach(disease => {
+        const diseaseItem = document.createElement('div');
+        diseaseItem.className = 'disease-item';
+        
+        // Add dosha type badge
+        const typeSpan = document.createElement('span');
+        typeSpan.className = `dosha-badge ${disease.type}`;
+        typeSpan.textContent = disease.type ? disease.type.charAt(0).toUpperCase() + disease.type.slice(1) : 'Unknown';
+        
+        // Create disease name element
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = disease.name;
+        
+        // Add elements to disease item
+        diseaseItem.appendChild(typeSpan);
+        diseaseItem.appendChild(nameSpan);
+        
+        // Add click event to show disease details
+        diseaseItem.addEventListener('click', function() {
+          showDiseaseDetails(disease);
+        });
+        
+        resultsList.appendChild(diseaseItem);
+      });
+      
+      // If there's only one result, also show its details
+      if (results.length === 1) {
+        setTimeout(() => {
+          showDiseaseDetails(results[0]);
+        }, 500);
+      }
+    }
   </script>
 </body>
 </html>

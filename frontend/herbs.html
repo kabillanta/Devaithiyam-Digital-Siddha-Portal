@@ -3,7 +3,178 @@
 <head>
   <meta charset="UTF-8">
   <title>Herbs | Siddha Medicine</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    /* Additional styles for herbs page */
+    .herbs-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    
+    .herb-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .herb-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    
+    .herb-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 15px;
+      border-bottom: 2px solid var(--accent-color);
+    }
+    
+    .herb-header h3 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    
+    .herb-subheader {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.9rem;
+      margin-top: 5px;
+      font-style: italic;
+    }
+    
+    .herb-details {
+      padding: 15px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .herb-details p {
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+    
+    .herb-detail-item {
+      display: flex;
+      margin-bottom: 8px;
+    }
+    
+    .detail-label {
+      font-weight: bold;
+      width: 100px;
+      color: var(--primary-color);
+      flex-shrink: 0;
+    }
+    
+    .detail-value {
+      flex: 1;
+    }
+    
+    .herb-footer {
+      padding: 12px 15px;
+      background-color: #f9fff9;
+      border-top: 1px solid #e0e0e0;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .more-info-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .more-info-btn:hover {
+      background-color: #277346;
+    }
+    
+    /* Modal styles */
+    .herb-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+    }
+    
+    .herb-modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 25px;
+      width: 80%;
+      max-width: 700px;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    /* Search and filter */
+    .search-filter-container {
+      padding: 20px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    #herb-search {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    
+    .filter-dropdown {
+      min-width: 180px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: white;
+    }
+    
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 300px;
+      width: 100%;
+    }
+
+    .no-herbs {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-style: italic;
+      background: #f9f9f9;
+      border-radius: 8px;
+      margin: 20px;
+    }
+  </style>
 </head>
 <body>
   <header class="navbar">
@@ -18,24 +189,398 @@
     </nav>
   </header>
 
-  <main class="features">
-    <div class="card">
-      <h3>Nilavembu</h3>
-      <p>Used for treating fever and body pain. Acts as anti-inflammatory.</p>
+  <main>
+    <div class="search-filter-container">
+      <input type="text" id="herb-search" placeholder="Search herbs...">
+      <select class="filter-dropdown" id="filter-part">
+        <option value="">All Parts</option>
+        <!-- Parts will be populated by JS -->
+      </select>
+      <select class="filter-dropdown" id="filter-use">
+        <option value="">All Uses</option>
+        <!-- Uses will be populated by JS -->
+      </select>
     </div>
-    <div class="card">
-      <h3>Thuthuvalai</h3>
-      <p>Relieves respiratory issues like asthma and cough.</p>
+    
+    <div id="herbs-container" class="herbs-container">
+      <div class="loading-container">
+        <div class="loading-indicator">Loading herbs data...</div>
+      </div>
     </div>
-    <div class="card">
-      <h3>Adathodai</h3>
-      <p>Helps in treating cold, cough, and wheezing in children.</p>
+    
+    <!-- Herb Detail Modal -->
+    <div id="herb-modal" class="herb-modal">
+      <div class="herb-modal-content">
+        <span class="close-button">&times;</span>
+        <h2 id="modal-herb-title"></h2>
+        <div id="modal-herb-details"></div>
+      </div>
     </div>
   </main>
 
   <footer>
     <p>📚 References: Siddha Texts, AYUSH</p>
   </footer>
+  
+  <script>
+    // Global variables
+    let allHerbs = [];
+    let uniqueParts = new Set();
+    let uniqueUses = new Set();
+    
+    // DOM Elements
+    const herbsContainer = document.getElementById('herbs-container');
+    const herbSearch = document.getElementById('herb-search');
+    const filterPart = document.getElementById('filter-part');
+    const filterUse = document.getElementById('filter-use');
+    const modal = document.getElementById('herb-modal');
+    const closeButton = document.querySelector('.close-button');
+    
+    // Load herbs data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadHerbsData();
+      
+      // Event listeners for search and filters
+      herbSearch.addEventListener('input', filterHerbs);
+      filterPart.addEventListener('change', filterHerbs);
+      filterUse.addEventListener('change', filterHerbs);
+      
+      // Close the modal when clicking the close button or outside the modal
+      closeButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    });
+    
+    // Function to load herbs data from CSV
+    async function loadHerbsData() {
+      try {
+        console.log('Loading herbs data...');
+        
+        // Load the CSV file
+        const response = await fetch('../backend/herb.csv');
+        if (!response.ok) {
+          throw new Error(`Failed to load herbs: ${response.status} ${response.statusText}`);
+        }
+        
+        const csvText = await response.text();
+        console.log('CSV data loaded, processing...');
+        
+        // Parse CSV
+        const herbs = parseCSV(csvText);
+        console.log(`Parsed ${herbs.length} herbs from CSV`);
+        
+        // Store herbs globally
+        allHerbs = herbs;
+        
+        // Extract unique parts and uses for filters
+        herbs.forEach(herb => {
+          if (herb.partUsed) uniqueParts.add(herb.partUsed);
+          if (herb.keyUses) {
+            const uses = herb.keyUses.split(',').map(use => use.trim());
+            uses.forEach(use => uniqueUses.add(use));
+          }
+        });
+        
+        // Populate filter dropdowns
+        populateFilterOptions();
+        
+        // Display herbs
+        displayHerbs(herbs);
+        
+      } catch (error) {
+        console.error('Error loading herbs data:', error);
+        herbsContainer.innerHTML = `
+          <div class="no-herbs">
+            <h3>Error Loading Herbs</h3>
+            <p>${error.message}</p>
+            <p>Please try refreshing the page or contact support.</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Parse CSV data
+    function parseCSV(csvText) {
+      const lines = csvText.split('\n');
+      const headers = lines[0].split(',').map(header => header.trim());
+      
+      const herbs = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue; // Skip empty lines
+        
+        // Handle commas within quoted fields
+        const values = [];
+        let currentValue = '';
+        let insideQuotes = false;
+        
+        for (let j = 0; j < lines[i].length; j++) {
+          const char = lines[i][j];
+          
+          if (char === '"' && (j === 0 || lines[i][j-1] !== '\\')) {
+            insideQuotes = !insideQuotes;
+          } else if (char === ',' && !insideQuotes) {
+            values.push(currentValue.trim());
+            currentValue = '';
+          } else {
+            currentValue += char;
+          }
+        }
+        
+        values.push(currentValue.trim());
+        
+        // Create herb object using headers as keys
+        const herb = {};
+        headers.forEach((header, index) => {
+          // Convert header to camelCase for easier JS usage
+          const key = header.toLowerCase()
+            .replace(/\s(.)/g, function(match, group) {
+              return group.toUpperCase();
+            })
+            .replace(/\s/g, '')
+            .replace(/\(.*?\)/g, '');
+          
+          herb[key] = values[index] ? values[index].replace(/^"(.+)"$/, '$1') : '';
+        });
+        
+        herbs.push(herb);
+      }
+      
+      return herbs;
+    }
+    
+    // Populate filter dropdown options
+    function populateFilterOptions() {
+      // Sort parts alphabetically
+      const sortedParts = Array.from(uniqueParts).sort();
+      sortedParts.forEach(part => {
+        const option = document.createElement('option');
+        option.value = part;
+        option.textContent = part;
+        filterPart.appendChild(option);
+      });
+      
+      // Sort uses alphabetically
+      const sortedUses = Array.from(uniqueUses).sort();
+      sortedUses.forEach(use => {
+        const option = document.createElement('option');
+        option.value = use;
+        option.textContent = use;
+        filterUse.appendChild(option);
+      });
+    }
+    
+    // Display herbs in the container
+    function displayHerbs(herbs) {
+      console.log(`Displaying ${herbs.length} herbs`);
+      
+      if (herbs.length === 0) {
+        herbsContainer.innerHTML = `
+          <div class="no-herbs">
+            <h3>No Herbs Found</h3>
+            <p>No herbs match your current search and filter criteria.</p>
+            <p>Try adjusting your search or clearing filters.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Clear container
+      herbsContainer.innerHTML = '';
+      
+      // Create herb cards
+      herbs.forEach(herb => {
+        const herbCard = document.createElement('div');
+        herbCard.className = 'herb-card';
+        
+        // Card header
+        const header = document.createElement('div');
+        header.className = 'herb-header';
+        
+        // English and Tamil names
+        const title = document.createElement('h3');
+        title.textContent = herb.herbNameEnglish;
+        
+        const subheader = document.createElement('div');
+        subheader.className = 'herb-subheader';
+        subheader.textContent = herb.tamilName ? `Tamil: ${herb.tamilName}` : '';
+        
+        header.appendChild(title);
+        header.appendChild(subheader);
+        
+        // Card details
+        const details = document.createElement('div');
+        details.className = 'herb-details';
+        
+        // Botanical name
+        if (herb.botanicalName) {
+          const botanicalDetail = createDetailItem('Botanical', herb.botanicalName);
+          details.appendChild(botanicalDetail);
+        }
+        
+        // Part used
+        if (herb.partUsed) {
+          const partDetail = createDetailItem('Part Used', herb.partUsed);
+          details.appendChild(partDetail);
+        }
+        
+        // Key uses (limited preview)
+        if (herb.keyUses) {
+          let usesText = herb.keyUses;
+          if (usesText.length > 60) {
+            usesText = usesText.substring(0, 60) + '...';
+          }
+          const usesDetail = createDetailItem('Uses', usesText);
+          details.appendChild(usesDetail);
+        }
+        
+        // Card footer
+        const footer = document.createElement('div');
+        footer.className = 'herb-footer';
+        
+        // Form of use hint
+        const formHint = document.createElement('span');
+        formHint.textContent = herb.formOfUse ? `Uses: ${herb.formOfUse.split(',')[0]}...` : '';
+        
+        // More info button
+        const moreInfoBtn = document.createElement('button');
+        moreInfoBtn.className = 'more-info-btn';
+        moreInfoBtn.innerHTML = '<i class="fas fa-info-circle"></i> More Info';
+        moreInfoBtn.addEventListener('click', () => showHerbDetails(herb));
+        
+        footer.appendChild(formHint);
+        footer.appendChild(moreInfoBtn);
+        
+        // Assemble card
+        herbCard.appendChild(header);
+        herbCard.appendChild(details);
+        herbCard.appendChild(footer);
+        
+        // Add card to container
+        herbsContainer.appendChild(herbCard);
+      });
+      
+      console.log('Herbs displayed successfully');
+    }
+    
+    // Create a detail item with label and value
+    function createDetailItem(label, value) {
+      const detailItem = document.createElement('div');
+      detailItem.className = 'herb-detail-item';
+      
+      const detailLabel = document.createElement('div');
+      detailLabel.className = 'detail-label';
+      detailLabel.textContent = label + ':';
+      
+      const detailValue = document.createElement('div');
+      detailValue.className = 'detail-value';
+      detailValue.textContent = value;
+      
+      detailItem.appendChild(detailLabel);
+      detailItem.appendChild(detailValue);
+      
+      return detailItem;
+    }
+    
+    // Filter herbs based on search and filter criteria
+    function filterHerbs() {
+      const searchTerm = herbSearch.value.toLowerCase();
+      const partFilter = filterPart.value;
+      const useFilter = filterUse.value;
+      
+      console.log(`Filtering herbs - Search: "${searchTerm}", Part: "${partFilter}", Use: "${useFilter}"`);
+      
+      const filteredHerbs = allHerbs.filter(herb => {
+        // Search term filter
+        const matchesSearch = 
+          !searchTerm || 
+          herb.herbNameEnglish.toLowerCase().includes(searchTerm) ||
+          herb.tamilName.toLowerCase().includes(searchTerm) ||
+          herb.botanicalName.toLowerCase().includes(searchTerm);
+        
+        // Part filter
+        const matchesPart = !partFilter || herb.partUsed.includes(partFilter);
+        
+        // Use filter
+        const matchesUse = !useFilter || herb.keyUses.toLowerCase().includes(useFilter.toLowerCase());
+        
+        return matchesSearch && matchesPart && matchesUse;
+      });
+      
+      console.log(`Filter results: ${filteredHerbs.length} herbs match criteria`);
+      displayHerbs(filteredHerbs);
+    }
+    
+    // Show herb details in modal
+    function showHerbDetails(herb) {
+      console.log(`Showing details for ${herb.herbNameEnglish}`);
+      
+      document.getElementById('modal-herb-title').textContent = herb.herbNameEnglish;
+      
+      const detailsContainer = document.getElementById('modal-herb-details');
+      detailsContainer.innerHTML = '';
+      
+      // Create detailed information
+      const infoTable = document.createElement('table');
+      infoTable.style.width = '100%';
+      infoTable.style.borderCollapse = 'collapse';
+      infoTable.style.marginTop = '20px';
+      
+      // Add rows to table
+      addTableRow(infoTable, 'Tamil Name', herb.tamilName);
+      addTableRow(infoTable, 'Botanical Name', herb.botanicalName);
+      addTableRow(infoTable, 'Part Used', herb.partUsed);
+      addTableRow(infoTable, 'Key Uses', formatUses(herb.keyUses));
+      addTableRow(infoTable, 'Form of Use', formatUses(herb.formOfUse));
+      
+      detailsContainer.appendChild(infoTable);
+      
+      // Show the modal
+      modal.style.display = 'block';
+      
+      console.log('Modal displayed successfully');
+    }
+    
+    // Helper to add table row
+    function addTableRow(table, label, value) {
+      const row = table.insertRow();
+      
+      const labelCell = row.insertCell(0);
+      labelCell.textContent = label;
+      labelCell.style.padding = '10px';
+      labelCell.style.fontWeight = 'bold';
+      labelCell.style.width = '130px';
+      labelCell.style.verticalAlign = 'top';
+      labelCell.style.borderBottom = '1px solid #eee';
+      
+      const valueCell = row.insertCell(1);
+      valueCell.innerHTML = value;
+      valueCell.style.padding = '10px';
+      valueCell.style.borderBottom = '1px solid #eee';
+    }
+    
+    // Format uses as HTML list
+    function formatUses(usesText) {
+      if (!usesText) return 'Not specified';
+      
+      const uses = usesText.split(',').map(use => use.trim());
+      
+      if (uses.length === 1) return uses[0];
+      
+      return '<ul style="margin: 0; padding-left: 20px;">' + 
+        uses.map(use => `<li>${use}</li>`).join('') + 
+        '</ul>';
+    }
+    
+    // Log initial page load
+    console.log('Herbs page loaded at', new Date().toLocaleString());
+  </script>
 </body>
 </html>
 
