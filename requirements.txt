@@ -1,7 +1,30 @@
 
-langchain
-pandas
-sentence-transformers
-faiss-cpu
-huggingface_hub
-getpass4
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# AI and Machine Learning
+langchain==0.1.0
+langchain-google-genai==1.0.1
+langchain-community==0.0.10
+langchain-huggingface==0.0.1
+
+# Data Processing
+pandas==2.1.4
+numpy==1.24.3
+
+# Vector Database and Embeddings
+sentence-transformers==2.2.2
+faiss-cpu==1.7.4
+huggingface_hub==0.19.4
+
+# Environment and Configuration
+python-dotenv==1.0.0
+pydantic==2.5.0
+
+# Web and API
+httpx==0.25.2
+
+
+# Optional: For better performance
+# torch==2.1.1  # Uncomment if you want PyTorch instead of default backend
