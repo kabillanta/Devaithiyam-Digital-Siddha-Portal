@@ -32,7 +32,7 @@ A comprehensive web application featuring a Siddha medicine chatbot powered by A
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/kabillanta/disease-chatbot.git
+git clone https://github.com/kabillanta/disease.git
 cd disease-chatbot
 ```
 
