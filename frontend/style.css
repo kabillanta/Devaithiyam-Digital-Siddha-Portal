@@ -72,7 +72,7 @@ a.header-link {
 /* Hero Section */
 .hero {
   background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
-    url("https://images.unsplash.com/photo-1583911269209-a74b23257857?q=80&w=1974&auto=format&fit=crop")
+    url("banner.jpg")
       no-repeat center center/cover;
   height: 450px;
   display: flex;
@@ -258,6 +258,118 @@ footer {
   text-align: center;
   padding: 1.5rem;
   font-size: 0.9rem;
+}
+
+/* --- Search Page Redesign --- */
+.search-filter-card {
+  text-align: left;
+  padding: 1.5rem 2rem;
+}
+.search-filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 0.75rem;
+}
+.search-filter-container .search-bar {
+  flex: 1 1 230px;
+  padding: 10px 14px;
+  border: 1px solid #d5d5d5;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fdfdfd;
+  transition: border-color .25s, box-shadow .25s;
+}
+.search-filter-container .search-bar:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(26,77,46,0.15);
+}
+.filter-dropdown {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 0.95rem;
+}
+.results-card {
+  padding: 1.5rem 2rem;
+}
+.search-results-grid {
+  display: grid;
+  /* Use auto-fit so empty space distributes; slightly larger min to balance cards */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+  align-items: stretch; /* ensure columns stretch evenly */
+}
+.result-group {
+  background: #ffffff;
+  border: 1px solid #e3e3e3;
+  border-radius: 12px;
+  padding: 1.15rem 1.25rem 1.35rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  min-height: 260px; /* give visual balance when fewer items */
+}
+.result-group:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.group-title {
+  margin: 0 0 .75rem 0;
+  font-size: 1.05rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  letter-spacing: .5px;
+}
+.result-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+}
+.result-list li {
+  background: #f9fbf9;
+  border: 1px solid #e2e8e4;
+  padding: .75rem .9rem .85rem;
+  border-radius: 10px;
+  font-size: .9rem;
+  line-height: 1.35rem;
+  position: relative;
+  transition: background-color .3s, transform .25s;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.result-list li:hover {
+  background: #eef7f0;
+  transform: translateY(-2px);
+}
+.result-list li strong { color: var(--primary-color); }
+.result-list li small { color: #555; }
+.nested-remedies {
+  margin-top: .6rem;
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+.nested-remedies li { background: #ffffff; border: 1px solid #dfe7e3; border-radius: 8px; padding: .55rem .7rem; display:flex; flex-direction:column; }
+.result-card-item { position: relative; }
+.result-card-item::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--accent-color); border-radius:4px 0 0 4px; opacity:.4; }
+.muted { color: #6c726d; font-size: .85rem; }
+.helper-text { margin-top: .75rem; }
+
+@media (max-width: 680px) {
+  .search-filter-container { flex-direction: column; }
+  .search-filter-container .search-bar { flex: 1 1 auto; }
+  .search-results-grid { grid-template-columns: 1fr; }
 }
 
 /* Search Bar Styles */

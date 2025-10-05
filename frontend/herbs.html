@@ -185,7 +185,8 @@
       <a href="diseases.html">Diseases</a>
       <a href="herbs.html">Herbs</a>
       <a href="remedies.html">Remedies</a>
-      <a href="history.html">History</a>
+  <a href="search.html">Search</a>
+      
     </nav>
   </header>
 
@@ -257,52 +258,45 @@
       });
     });
     
-    // Function to load herbs data from CSV
+    // Function to load herbs data from API (fallback to CSV parsing removed)
     async function loadHerbsData() {
+      const API_BASE_URL = 'http://127.0.0.1:8000';
       try {
-        console.log('Loading herbs data...');
-        
-        // Load the CSV file
-        const response = await fetch('../backend/herb.csv');
-        if (!response.ok) {
-          throw new Error(`Failed to load herbs: ${response.status} ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
-        console.log('CSV data loaded, processing...');
-        
-        // Parse CSV
-        const herbs = parseCSV(csvText);
-        console.log(`Parsed ${herbs.length} herbs from CSV`);
-        
-        // Store herbs globally
+        console.log('Fetching herbs from API ...');
+        const response = await fetch(`${API_BASE_URL}/herbs`);
+        if (!response.ok) throw new Error(`API error ${response.status}`);
+        const data = await response.json();
+        const herbs = (data.herbs || []).map(normalizeHerbRecord);
+        console.log(`Received ${herbs.length} herbs from API`);
+
         allHerbs = herbs;
-        
-        // Extract unique parts and uses for filters
         herbs.forEach(herb => {
           if (herb.partUsed) uniqueParts.add(herb.partUsed);
-          if (herb.keyUses) {
-            const uses = herb.keyUses.split(',').map(use => use.trim());
-            uses.forEach(use => uniqueUses.add(use));
-          }
+          if (herb.keyUses) herb.keyUses.split(',').map(u=>u.trim()).forEach(u=>uniqueUses.add(u));
         });
-        
-        // Populate filter dropdowns
         populateFilterOptions();
-        
-        // Display herbs
         displayHerbs(herbs);
-        
       } catch (error) {
-        console.error('Error loading herbs data:', error);
+        console.error('Herbs API failed:', error);
         herbsContainer.innerHTML = `
           <div class="no-herbs">
-            <h3>Error Loading Herbs</h3>
+            <h3>Failed to Load Herbs</h3>
             <p>${error.message}</p>
-            <p>Please try refreshing the page or contact support.</p>
-          </div>
-        `;
+            <p>Backend may be offline. Start FastAPI server then refresh.</p>
+          </div>`;
       }
+    }
+
+    // Normalize raw API herb record (CSV headers) into camelCase keys used by UI
+    function normalizeHerbRecord(raw) {
+      return {
+        herbNameEnglish: raw['Herb Name (English)'] || raw['Herb Name'] || '',
+        tamilName: raw['Tamil Name'] || '',
+        botanicalName: raw['Botanical Name'] || '',
+        partUsed: raw['Part Used'] || '',
+        keyUses: raw['Key Uses'] || '',
+        formOfUse: raw['Form of Use'] || ''
+      };
     }
     
     // Parse CSV data

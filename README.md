@@ -1,24 +1,28 @@
 # Siddha Medicine Chatbot & Portal
 
-A comprehensive web application featuring a Siddha medicine chatbot powered by AI, along with databases of diseases, herbs, and remedies based on traditional Siddha medicine practices.
+A comprehensive web application featuring a Siddha medicine chatbot (multi‑turn, CSV‑aware) plus searchable databases of diseases, herbs, and remedies grounded in traditional Siddha medicine.
 
 ## Features
 
-- 🤖 **AI Chatbot**: Interactive chatbot for Siddha medicine queries using Google's Gemini AI
-- 💊 **Disease Database**: Categorized diseases by dosha types (Kabam, Pitham, Vatham)
-- 🌿 **Herbs Database**: Comprehensive herb information with usage and properties
-- 🏥 **Remedies Database**: Traditional Siddha remedies and preparations
-- 🔍 **Search Functionality**: Search across diseases, herbs, and remedies
-- 📱 **Responsive Design**: Works on desktop and mobile devices
+- 🤖 **Multi‑Turn Chatbot**: Remembers prior turns via `chat_history`; greets politely without false matches
+- 🧪 **Context‑Aware Matching**: Greeting inputs ("hi", "hello") no longer trigger disease matches (e.g. prevents "hi" → "hiccups")
+- 💊 **Disease Database**: Categorized diseases by dosha (Kabam, Pitham, Vatham)
+- 🌿 **Herbs Database**: Herb details (names, uses, properties)
+- 🏥 **Remedies Database**: Traditional Siddha remedies with preparation & usage
+- 🔍 **Unified Search Page**: Combine a disease term and ingredient list to get the best matching disease and intersected remedies; or search by only disease or only ingredients
+- 🧮 **Scoring & Token Highlights**: Backend ranks diseases/remedies by coverage & match score
+- 🧾 **Direct Lookups**: Asking about a single herb/remedy returns precise CSV data (no hallucinations in SIMPLE_MODE)
+- 🧰 **SIMPLE_MODE**: Lightweight operation without external AI (Gemini / embeddings) for offline or constrained environments
+- 📱 **Responsive Design**: Desktop & mobile friendly
 
 ## Technology Stack
 
 - **Backend**: FastAPI (Python)
-- **Frontend**: HTML, CSS, JavaScript
-- **AI**: Google Gemini AI via LangChain
-- **Vector Database**: FAISS
-- **Data Processing**: Pandas
-- **Embeddings**: HuggingFace Sentence Transformers
+- **Frontend**: HTML, CSS, JavaScript (vanilla)
+- **AI (optional)**: Google Gemini via LangChain + FAISS (when SIMPLE_MODE disabled)
+- **Data**: CSV (diseases, herbs, remedies)
+- **Processing**: Pandas; lightweight heuristic scoring
+- **Embeddings (optional)**: HuggingFace Sentence Transformers
 
 ## Prerequisites
 
@@ -33,7 +37,7 @@ A comprehensive web application featuring a Siddha medicine chatbot powered by A
 
 ```bash
 git clone https://github.com/kabillanta/disease.git
-cd disease-chatbot
+cd disease
 ```
 
 ### 2. Create Virtual Environment
@@ -122,55 +126,136 @@ The web application will be available at: `http://localhost:8080` (or your chose
 ## Project Structure
 
 ```
-disease-chatbot/
+disease/
 ├── backend/
-│   ├── server.py           # FastAPI server
-│   ├── herb.csv           # Herbs database
-│   └── remedy.csv         # Remedies database
+│   ├── app.py (optional entry, main server is server.py)
+│   ├── server.py                 # FastAPI application
+│   ├── herb.csv                  # Herbs dataset
+│   ├── remedy.csv                # Remedies dataset
+│   ├── cleaned_chatbot_with_type.csv # Processed disease data (with type)
+│   └── cleaned_chatbot_with_type.csv (duplicate also in frontend for UI usage)
 ├── corpus/
-│   ├── chatbot.csv        # Original disease data
-│   └── cleaned_chatbot.csv # Processed disease data
+│   ├── chatbot.csv               # Original raw disease data
+│   └── cleaned_chatbot.csv       # Cleaned disease data
 ├── frontend/
-│   ├── index.html         # Home page
-│   ├── chatbot.html       # Chatbot interface
-│   ├── diseases.html      # Diseases database
-│   ├── herbs.html         # Herbs database
-│   ├── remedies.html      # Remedies database
-│   ├── script.js          # JavaScript functionality
-│   └── style.css          # Styling
-├── .env                   # Environment variables
-├── requirements.txt       # Python dependencies
-└── README.md             # This file
+│   ├── index.html                # Home
+│   ├── chatbot.html              # Chat interface
+│   ├── diseases.html             # Disease list
+│   ├── herbs.html                # Herb list
+│   ├── remedies.html             # Remedy list
+│   ├── search.html               # Unified search (disease + ingredients)
+│   ├── script.js                 # Shared JS (navigation, general)
+│   ├── search.js                 # Search page logic
+│   ├── style.css                 # Styles
+│   └── cleaned_chatbot_with_type.csv # (frontend copy if needed)
+├── requirements.txt              # Python dependencies
+├── README.md                     # This file
+└── .env                          # Environment variables (not committed)
 ```
 
 ## API Endpoints
 
 ### Chat Endpoint
-- **POST** `/chat` - Chat with the Siddha medicine bot
-  ```json
-  {
-    "question": "What are the symptoms of fever?",
-    "chat_history": []
-  }
-  ```
+- **POST** `/chat` – Multi-turn chat with Siddha medicine assistant
+   Request body:
+   ```json
+   {
+      "question": "What are the symptoms of fever?",
+      "chat_history": [["I have a cough", "Consider steam inhalation..."]]
+   }
+   ```
+   Behavior:
+   - `chat_history`: list of `[user, assistant]` turn pairs; send all previous turns for context
+   - Greeting detection: pure greetings return a short friendly message (no disease heuristic)
+   - Direct herb/remedy question returns a `lookup` object for deterministic CSV facts
+   - SIMPLE_MODE: skips embeddings / Gemini, relies purely on CSV heuristic search
+   - Response fields may include:
+      - `answer`: main text
+      - `lookup`: `{ "category": "herb|remedy", "query": "turmeric" }` when direct match
+      - `sources`: (advanced mode only) retrieval sources (may be empty in SIMPLE_MODE)
+
+## SIMPLE_MODE vs Advanced Mode
+
+SIMPLE_MODE keeps everything lightweight and deterministic.
+
+Enable (Windows PowerShell):
+```powershell
+$env:SIMPLE_MODE="1"; uvicorn server:app --reload --host 127.0.0.1 --port 8000
+```
+Enable (macOS / Linux):
+```bash
+SIMPLE_MODE=1 uvicorn server:app --reload --host 127.0.0.1 --port 8000
+```
+Disable (return to advanced mode): unset or set to 0 and restart.
+
+In SIMPLE_MODE:
+- No embeddings / FAISS index / Gemini model
+- Faster startup, lower memory
+- Chat limited to CSV heuristics + direct lookups
+
+In Advanced Mode (SIMPLE_MODE unset):
+- (Optional) Embeddings & retrieval for richer contextual answers
+- Potential use of Gemini for generative responses
+
+If API keys are missing, the server will still run in fallback behavior but without generative enhancements.
+
+Note: References to `offline_chat.py` or backup server files have been removed (no longer included in repo).
+
+## Troubleshooting
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Chatbot says it's unavailable | Missing API key or init failed | Set `GOOGLE_API_KEY`, restart, check logs |
+| Want only CSV answers | Need lightweight mode | Set `SIMPLE_MODE=1` |
+| Can't install faiss / transformers | Limited environment | Use `SIMPLE_MODE` or `offline_chat.py` |
+| Herb/Remedy not found | Name mismatch | Try English, Tamil, or botanical variant |
+
+---
+Feel free to switch between modes depending on your environment or demo needs.
+   - UI can detect `lookup` to style the response differently.
 
 ### Disease Endpoints
-- **GET** `/diseases/all` - Get all diseases
-- **GET** `/diseases/kabam` - Get Kabam dosha diseases
-- **GET** `/diseases/pitham` - Get Pitham dosha diseases
-- **GET** `/diseases/vatham` - Get Vatham dosha diseases
-- **GET** `/diseases/search?query=fever` - Search diseases
+- **GET** `/diseases/all` – All diseases
+- **GET** `/diseases/kabam` – Kabam dosha diseases
+- **GET** `/diseases/pitham` – Pitham dosha diseases
+- **GET** `/diseases/vatham` – Vatham dosha diseases
+- **GET** `/diseases/search?query=fever` – Search diseases by name (heuristic)
 
 ### Remedy Endpoints
-- **GET** `/remedies` - Get all remedies
-- **GET** `/remedies/search?query=turmeric` - Search remedies
+- **GET** `/remedies` – All remedies
+- **GET** `/remedies/search?query=turmeric` – Search remedies (name / ingredient token match)
+
+### Unified Search Endpoint
+- **GET** `/search/filters?disease=<term>&ingredients=<comma+separated+tokens>`
+
+Scenarios:
+1. Disease only: returns the single best matching disease (by name token coverage & score) with its remedies (embedded). Remedies are filtered for relevance.
+2. Ingredients only: returns `diseases_for_ingredients` (diseases related to those ingredients) and `remedies_using_ingredients` ranked by ingredient coverage.
+3. Both disease + ingredients: response centers on a single primary disease plus only remedies that include the provided ingredient tokens (intersection). Includes scoring metadata and matched token lists.
+
+Response Fields (subset may appear depending on scenario):
+```json
+{
+   "query": {"disease": "hiccups", "ingredients": ["ginger", "honey"]},
+   "disease_match": {"name": "Hiccups", "score": 0.92, "primary": true, "matched_tokens": ["hiccups"]},
+   "embedded_remedies": [
+       {"name": "Ginger Honey Mix", "ingredients": "Ginger, Honey", "match_score": 0.87, "matched_ingredients": ["ginger", "honey"]}
+   ],
+   "diseases_for_ingredients": [...],
+   "remedies_using_ingredients": [...]
+}
+```
+All numeric fields are JSON-safe (NaN/inf coerced). Fields not applicable are omitted.
 
 ## Usage
 
 ### 1. Chatbot
-- Navigate to the chatbot page
-- Type your symptoms or health questions
-- Get AI-powered responses based on Siddha medicine knowledge
+- Open `chatbot.html`
+- Enter symptoms, conditions, or direct herb/remedy names
+- Casual greetings ("hi", "hello") return polite acknowledgements only
+- Disease detection ignores pure greetings (prevents false matches like "hi" → "hiccups")
+- Direct single-entity questions produce structured lookup answers
+- Multi-turn: always append the last Q/A pair to `chat_history` before sending the next question
 
 ### 2. Diseases Database
 - Browse diseases by dosha type (Kabam, Pitham, Vatham)
@@ -187,9 +272,15 @@ disease-chatbot/
 - View preparation methods and usage instructions
 - Search remedies by name or ingredients
 
+### 5. Unified Search Page (`search.html`)
+- Input a disease name, ingredient list, or both
+- When both are supplied the page shows the top disease match plus intersected remedies only
+- Scores and matched tokens help explain relevance
+- Layout uses responsive equal-height cards for consistent spacing
+
 ## Troubleshooting
 
-### Common Issues:
+### Common Issues
 
 1. **"Module not found" error**:
    - Make sure virtual environment is activated
@@ -220,7 +311,7 @@ uvicorn server:app --reload --host 127.0.0.1 --port 8001
 python -m http.server 8081
 ```
 
-Remember to update the API endpoint in `script.js` if you change the backend port.
+Remember to update any hard-coded API base URL in JS files if you change the backend port.
 
 ## Development
 
@@ -237,10 +328,10 @@ Remember to update the API endpoint in `script.js` if you change the backend por
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make changes and commit: `git commit -m "Add feature"`
-4. Push to branch: `git push origin feature-name`
-5. Create a Pull Request
+2. Create a feature branch: `git checkout -b feature/<short-name>`
+3. Commit with conventional style if possible: `feat: add fallback remedy matching`
+4. Push: `git push origin feature/<short-name>`
+5. Open a Pull Request with description & screenshots (if UI)
 
 ## License
 

@@ -145,7 +145,8 @@
       <a href="diseases.html">Diseases</a>
       <a href="herbs.html">Herbs</a>
       <a href="remedies.html">Remedies</a>
-      <a href="history.html">History</a>
+  <a href="search.html">Search</a>
+      
     </nav>
   </header>
 
@@ -225,6 +226,16 @@
           modal.style.display = 'none';
         }
       });
+
+      // After slight delay (ensure CSV loaded), process URL param ?query=
+      setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        const qp = params.get('query');
+        if (qp) {
+          searchInput.value = qp;
+          searchRemedies();
+        }
+      }, 700);
     });
 
     // Function to load the remedy CSV file

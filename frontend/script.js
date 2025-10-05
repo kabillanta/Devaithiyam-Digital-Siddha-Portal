@@ -3,7 +3,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
 
+    // Load stored history (array of [user, assistant])
     let chatHistory = [];
+    try {
+        const stored = localStorage.getItem('siddha_chat_history');
+        if (stored) {
+            chatHistory = JSON.parse(stored);
+            // Re-render previous conversation
+            chatHistory.forEach(pair => {
+                appendMessage(pair[0], 'user-message', true);
+                appendMessage(pair[1], 'bot-message', false);
+            });
+        }
+    } catch (e) { console.warn('Failed to restore history', e); }
 
     const sendMessage = async () => {
         const question = userInput.value.trim();
@@ -44,15 +56,34 @@ document.addEventListener("DOMContentLoaded", () => {
             chatBox.removeChild(thinkingIndicator);
             
             // Check if marked is available
+            let finalAnswer = data.answer;
+            if (data.lookup) {
+                const header = `Direct ${data.lookup.category} lookup for: ${data.lookup.query} (matches: ${data.lookup.count})`;
+                finalAnswer = header + "\n\n" + finalAnswer;
+            }
+
+            // Append structured remedies section if present
+            const collectRemedySection = (arr, title) => {
+                if (!arr || arr.length === 0) return '';
+                const lines = [`\n\n### ${title}\n`];
+                arr.forEach(r => {
+                    lines.push(`**${r.name}**\n- Preparation: ${r.preparation}\n- Usage: ${r.usage}\n- More: <a href="${r.url}" target="_blank">Open</a>\n`);
+                });
+                return lines.join('\n');
+            };
+            finalAnswer += collectRemedySection(data.referenced_remedies, 'Remedy Details');
+            finalAnswer += collectRemedySection(data.suggested_remedies, 'Suggested Remedies');
+
             if (typeof marked !== 'undefined' && marked.parse) {
                 console.log("Using marked.parse for markdown");
-                appendMessage(marked.parse(data.answer), "bot-message", false);
+                appendMessage(marked.parse(finalAnswer), "bot-message", false);
             } else {
                 console.log("Marked not available, using plain text");
-                appendMessage(data.answer, "bot-message", false);
+                appendMessage(finalAnswer, "bot-message", false);
             }
 
             chatHistory.push([question, data.answer]);
+            try { localStorage.setItem('siddha_chat_history', JSON.stringify(chatHistory)); } catch(e) {}
             console.log("Updated chat history:", chatHistory);
 
         } catch (error) {
@@ -87,4 +118,15 @@ document.addEventListener("DOMContentLoaded", () => {
     userInput.addEventListener("keypress", (event) => {
         if (event.key === "Enter") sendMessage();
     });
+
+    // Optional clear history button (if element exists)
+    const clearBtn = document.getElementById('clear-history');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            localStorage.removeItem('siddha_chat_history');
+            chatHistory = [];
+            chatBox.innerHTML = '';
+            appendMessage('History cleared. Start a new conversation.', 'bot-message', false);
+        });
+    }
 });
