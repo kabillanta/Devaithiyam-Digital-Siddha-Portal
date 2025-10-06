@@ -5,7 +5,7 @@ A comprehensive web application featuring a Siddha medicine chatbot (multi‑tur
 ## Features
 
 - 🤖 **Multi‑Turn Chatbot**: Remembers prior turns via `chat_history`; greets politely without false matches
-- 🧪 **Context‑Aware Matching**: Greeting inputs ("hi", "hello") no longer trigger disease matches (e.g. prevents "hi" → "hiccups")
+- 🧪 **Context‑Aware Matching**: Greeting inputs ("hi", "hello") no longer trigger disease matches 
 - 💊 **Disease Database**: Categorized diseases by dosha (Kabam, Pitham, Vatham)
 - 🌿 **Herbs Database**: Herb details (names, uses, properties)
 - 🏥 **Remedies Database**: Traditional Siddha remedies with preparation & usage
